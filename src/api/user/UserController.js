@@ -1,15 +1,21 @@
 var express = require('express');
 var router = express.Router();
 var bodyParser = require('body-parser');
+var VerifyToken = require('../auth/VerifyToken');
+var bcrypt = require('bcryptjs');
+
 router.use(bodyParser.urlencoded({ extended: true }));
 var User = require('./User');
 // ADD THIS PART
 // CREATES A NEW USER
-router.post('/', function (req, res) {
+router.post('/', VerifyToken, function (req, res) {
+
+    var hashedPassword = bcrypt.hashSync(req.body.password, 8);
+
     User.create({
             userName : req.body.name,
             email : req.body.email,
-            password : req.body.password,
+            password : hashedPassword,
             firstName : req.body.firstName,
             lastName : req.body.lastName,
             dob : req.body.dob,
@@ -22,7 +28,7 @@ router.post('/', function (req, res) {
 });
 
 // RETURNS ALL THE USERS IN THE DATABASE
-router.get('/', function (req, res) {
+router.get('/', VerifyToken, function (req, res) {
     User.find({}, function (err, users) {
         if (err) return res.status(500).send("There was a problem finding the users.");
         res.status(200).send(users);
@@ -30,7 +36,7 @@ router.get('/', function (req, res) {
 });
 
 // GETS A SINGLE USER FROM THE DATABASE
-router.get('/:id', function (req, res) {
+router.get('/:id', VerifyToken, function (req, res) {
     User.findById(req.params.id, function (err, user) {
         if (err) return res.status(500).send("There was a problem finding the user.");
         if (!user) return res.status(404).send("No user found.");
@@ -39,7 +45,7 @@ router.get('/:id', function (req, res) {
 });
 
 // DELETES A USER FROM THE DATABASE
-router.delete('/:id', function (req, res) {
+router.delete('/:id', VerifyToken, function (req, res) {
     User.findByIdAndRemove(req.params.id, function (err, user) {
         if (err) return res.status(500).send("There was a problem deleting the user.");
         res.status(200).send("User "+ user.name +" was deleted.");
@@ -47,8 +53,10 @@ router.delete('/:id', function (req, res) {
 });
 
 // UPDATES A SINGLE USER IN THE DATABASE
-router.put('/:id', function (req, res) {
-    
+router.put('/:id', VerifyToken, function (req, res) {
+    if(req.body.password !== undefined){
+        req.body.password = bcrypt.hashSync(req.body.password, 8);
+    }
     User.findByIdAndUpdate(req.params.id, req.body, {new: true}, function (err, user) {
         if (err) return res.status(500).send("There was a problem updating the user.");
         res.status(200).send(user);
