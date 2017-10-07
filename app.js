@@ -7,6 +7,10 @@ var jwt  = require('jsonwebtoken');
 var UserController = require('./src/api/user/UserController');
 app.use('/api/users', UserController);
 
+// add ItemController
+var ItemController = require('./src/api/item/ItemController');
+app.use('/api/items', ItemController);
+
 // add AuthController
 var AuthController = require('./src/api/auth/AuthController');
 app.use('/api/auth', AuthController);
